@@ -46,45 +46,55 @@ const Form = () => {
     }
 
     const handleCityChange = (e) => {
-        setCitiesList(current => [...current, e.target.value]);
+        if (!citiesList.includes(e.target.value)) {
+            setCitiesList(current => [...current, e.target.value]);
+        }
     }
 
     return (
-        <form>
-            <h2>Dados Pessoais</h2>
-            <label>
-                Nome
-                <input type="text" name="name" id="name" required />
-            </label>
-            <label>
-                Email
-                <input type='email' name="email" id="email" required />
-            </label>
-            <label>
-                Telefone
-                <IMaskInput name="phone" mask="(00) 00000-0000" required />
-            </label>
-            <label>
-                CPF
-                <IMaskInput name="cpf" mask="000.000.000-00" required />
-            </label>
-            <h2>Destinos de Interesse</h2>
-            <label>
-                País
-                <select name="countries" id="countries" onChange={handleCountryChange}>
-                    {countries.map((country, index) => <option value={country.code} key={index}>{country.name_ptbr}</option>)}
-                </select>
-            </label>
-            <ListLocations locations={countriesList} />
-            <label>
-                Cidade
-                <select name="cities" id="cities" onChange={handleCityChange}>
-                    {filteredCities.map((city, index) => <option value={city.name_ptbr} key={index}>{city.name}</option>)}
-                </select>
+        <form className='form'>
+            <div className='form__container'>
+                <div className='form__subcontainer'>
+                    <h2 className='form__subtitle'>Dados Pessoais</h2>
+                    <label className='form__label'>
+                        <span className='form__label__type'>Nome</span>
+                        <input type="text" name="name" id="name" required className='form__label__input' />
+                    </label>
+                    <label className='form__label'>
+                        <span className='form__label__type'>Email</span>
+                        <input type='email' name="email" id="email" required className='form__label__input' />
+                    </label>
+                    <label className='form__label'>
+                        <span className='form__label__type'>Telefone</span>
+                        <IMaskInput name="phone" mask="(00) 00000-0000" required className='form__label__input' />
+                    </label>
+                    <label className='form__label'>
+                        <span className='form__label__type'>CPF</span>
+                        <IMaskInput name="cpf" mask="000.000.000-00" required className='form__label__input' />
+                    </label>
+                </div>
+                <div className='form__subcontainer'>
+                    <h2 className='form__subtitle'>Destinos de Interesse</h2>
+                    <label>
+                        <span className='form__label__type'>País</span>
+                        <select name="countries" id="countries" onChange={handleCountryChange} className='form__label__select' required>
+                            <option value="" disabled selected>Selecione o país</option>
+                            {countries.map((country, index) => <option value={country.code} key={index}>{country.name_ptbr}</option>)}
+                        </select>
+                    </label>
+                    <ListLocations locations={countriesList} />
+                    <label className='form__label__city'>
+                        <span className='form__label__type'>Cidade</span>
+                        <select name="cities" id="cities" onChange={handleCityChange} className='form__label__select' required>
+                            <option value="" disabled selected>Selecione a cidade</option>
+                            {filteredCities.map((city, index) => <option value={city.name_ptbr} key={index}>{city.name}</option>)}
+                        </select>
 
-            </label>
-            <ListLocations locations={citiesList} />
-            <button type="submit">Enviar</button>
+                    </label>
+                    <ListLocations locations={citiesList} />
+                </div>
+            </div>
+            <button type="submit" className='btn'>Enviar</button>
         </form>
     );
 }
