@@ -1,7 +1,7 @@
+import { useRef } from 'react';
 import { useEffect, useState } from 'react';
 import { IMaskInput } from 'react-imask';
-
-import ListLocations from '../ListLocations/ListLocations';
+import Select from 'react-select';
 
 import './Form.css';
 
@@ -9,14 +9,17 @@ const countryUrl = "https://amazon-api.sellead.com/country";
 const cityUrl = "https://amazon-api.sellead.com/city";
 
 const Form = () => {
+    const countryRef = useRef();
+    const cityRef = useRef();
+
     const [countries, setCountries] = useState([]);
     const [cities, setCities] = useState([]);
-    const [filteredCities, setFilteredCities] = useState([]);
 
-    const [chosenCountry, setChosenCountry] = useState("");
-
-    const [countriesList, setCountriesList] = useState([]);
     const [citiesList, setCitiesList] = useState([]);
+
+    const [refactoredCountry, setRefactoredCountry] = useState([]);
+
+    const [selectedCountries, setSelectedCountries] = useState([]);
 
     useEffect(() => {
         fetch(countryUrl)
@@ -26,28 +29,44 @@ const Form = () => {
         fetch(cityUrl)
             .then(res => res.json())
             .then(cityData => setCities(cityData));
-    }, [])
+
+    }, []);
 
     useEffect(() => {
-        const availableCities = cities.filter(value => value.country_code === chosenCountry)
+        const optionsCountries = countries.map(country => ({
+            label: country.name_ptbr,
+            value: country.code,
+        }))
 
-        setFilteredCities(availableCities);
+        setRefactoredCountry(optionsCountries);
+    }, [countries]);
 
-    }, [chosenCountry, cities])
+    useEffect(() => {
+        setCitiesList([]);
+        selectedCountries.forEach((country) => {
+            const filteredCities = cities.filter(city => city.country_code === country.value);
+            filteredCities.forEach((value) => {
+                const city = {
+                    value: value.country_code,
+                    label: value.name,
+                }
+                setCitiesList(current => [...current, city]);
+            })
+        })
+    }, [selectedCountries, cities]);
 
-
-
-    const handleCountryChange = (e) => {
-        setChosenCountry(e.target.value);
-        const countryArray = countries.filter(country => country.code === e.target.value)
-        if (!countriesList.includes(countryArray[0].name_ptbr)) {
-            setCountriesList(current => [...current, countryArray[0].name_ptbr]);
-        }
+    const handleChange = (option) => {
+        setSelectedCountries(option);
     }
 
-    const handleCityChange = (e) => {
-        if (!citiesList.includes(e.target.value)) {
-            setCitiesList(current => [...current, e.target.value]);
+    const handleSubmit = (e) => {
+        if (!countryRef.current.state.ariaSelection) {
+            e.preventDefault();
+            alert("Por favor, selecione ao menos um País.");
+        }
+        if (!cityRef.current.state.ariaSelection) {
+            e.preventDefault();
+            alert("Por favor, selecione ao menos uma Cidade.");
         }
     }
 
@@ -57,44 +76,62 @@ const Form = () => {
                 <div className='form__subcontainer'>
                     <h2 className='form__subtitle'>Dados Pessoais</h2>
                     <label className='form__label'>
-                        <span className='form__label__type'>Nome</span>
-                        <input type="text" name="name" id="name" required className='form__label__input' />
+                        <span className='form__label__type'>Nome <i className='form__asterisk'>(*)</i></span>
+                        <input type="text"
+                            name="name"
+                            id="name"
+                            pattern="[a-zA-Z]*"
+                            title='Este campo só aceita letras.'
+                            required
+                            className='form__label__input' />
                     </label>
                     <label className='form__label'>
-                        <span className='form__label__type'>Email</span>
-                        <input type='email' name="email" id="email" required className='form__label__input' />
+                        <span className='form__label__type'>Email <i className='form__asterisk'>(*)</i></span>
+                        <input type='email'
+                            name="email"
+                            id="email"
+                            required
+                            className='form__label__input' />
                     </label>
                     <label className='form__label'>
-                        <span className='form__label__type'>Telefone</span>
-                        <IMaskInput name="phone" mask="(00) 00000-0000" required className='form__label__input' />
+                        <span className='form__label__type'>Telefone <i className='form__asterisk'>(*)</i></span>
+                        <IMaskInput name="phone"
+                            mask="(00) 00000-0000"
+                            required
+                            className='form__label__input' />
                     </label>
                     <label className='form__label'>
-                        <span className='form__label__type'>CPF</span>
-                        <IMaskInput name="cpf" mask="000.000.000-00" required className='form__label__input' />
+                        <span className='form__label__type'>CPF <i className='form__asterisk'>(*)</i></span>
+                        <IMaskInput name="cpf"
+                            mask="000.000.000-00"
+                            required
+                            className='form__label__input' />
                     </label>
+                    <p className='form__required-alert'>(*): Campos obrigatórios.</p>
                 </div>
                 <div className='form__subcontainer'>
                     <h2 className='form__subtitle'>Destinos de Interesse</h2>
                     <label>
-                        <span className='form__label__type'>País</span>
-                        <select name="countries" id="countries" onChange={handleCountryChange} className='form__label__select' required>
-                            <option value="" disabled selected>Selecione o país</option>
-                            {countries.map((country, index) => <option value={country.code} key={index}>{country.name_ptbr}</option>)}
-                        </select>
+                        <span className='form__label__type'>País <i className='form__asterisk'>(*)</i></span>
+                        <Select isMulti
+                            options={refactoredCountry}
+                            onChange={handleChange}
+                            className="form__label__select"
+                            required={true}
+                            ref={countryRef} />
                     </label>
-                    <ListLocations locations={countriesList} />
                     <label className='form__label__city'>
-                        <span className='form__label__type'>Cidade</span>
-                        <select name="cities" id="cities" onChange={handleCityChange} className='form__label__select' required>
-                            <option value="" disabled selected>Selecione a cidade</option>
-                            {filteredCities.map((city, index) => <option value={city.name_ptbr} key={index}>{city.name}</option>)}
-                        </select>
-
+                        <span className='form__label__type'>Cidade <i className='form__asterisk'>(*)</i></span>
+                        <Select isMulti
+                            options={citiesList}
+                            className="form__label__select"
+                            required={true}
+                            ref={cityRef} />
                     </label>
-                    <ListLocations locations={citiesList} />
                 </div>
+                <p className='form__required-alert-mobile'>(*): Campos obrigatórios.</p>
             </div>
-            <button type="submit" className='btn'>Enviar</button>
+            <button type="submit" className='btn' onClick={handleSubmit}>Enviar</button>
         </form>
     );
 }
